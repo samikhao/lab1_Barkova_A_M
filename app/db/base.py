@@ -1,5 +1,5 @@
-from sqlalchemy.orm import DeclarativeBase
+from app.db.base_class import Base
 
-# базовый класс для всех моделей
-class Base(DeclarativeBase):
-    pass
+from app.models.user import User
+from app.models.news import News
+from app.models.comment import Comment 

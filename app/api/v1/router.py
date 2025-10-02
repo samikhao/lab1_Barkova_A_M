@@ -1,7 +1,10 @@
 from fastapi import APIRouter
-from . import users, news, comments
 
-router = APIRouter(prefix="/api/v1")
-router.include_router(users.router, tags=["users"])
-router.include_router(news.router, tags=["news"])
-router.include_router(comments.router, tags=["comments"])
+from app.api.v1.users import router as users_router
+from app.api.v1.news import router as news_router
+from app.api.v1.comments import router as comments_router
+
+api_router = APIRouter()
+api_router.include_router(users_router)
+api_router.include_router(news_router)
+api_router.include_router(comments_router) 
