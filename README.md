@@ -27,6 +27,40 @@ alembic upgrade head
 # Запуск
 uvicorn app.api.main:app --reload
 
+# ERD
+```mermaid
+erDiagram
+  users ||--o{ news : "author_id"
+  users ||--o{ comments : "author_id"
+  news  ||--o{ comments : "news_id"
+
+  users {
+    int id PK
+    string name
+    string email UNIQUE
+    timestamptz registered_at
+    bool is_verified
+    string avatar_url
+  }
+
+  news {
+    int id PK
+    string title
+    json content
+    timestamptz published_at
+    string cover_url
+    int author_id FK
+  }
+
+  comments {
+    int id PK
+    string text
+    timestamptz published_at
+    int news_id FK
+    int author_id FK
+  }
+```
+
 # Примеры работы всех эндпоинтов:
 1. Создание пользователя
 ```bash
