@@ -30,34 +30,34 @@ uvicorn app.api.main:app --reload
 # ERD
 ```mermaid
 erDiagram
-  users ||--o{ news : "author_id"
-  users ||--o{ comments : "author_id"
-  news  ||--o{ comments : "news_id"
+  users ||--o{ news : has
+  users ||--o{ comments : has
+  news  ||--o{ comments : has
 
   users {
-    int id PK
+    int id
     string name
-    string email UNIQUE
-    timestamptz registered_at
-    bool is_verified
+    string email
+    datetime registered_at
+    boolean is_verified
     string avatar_url
   }
 
   news {
-    int id PK
+    int id
     string title
-    json content
-    timestamptz published_at
+    string content
+    datetime published_at
     string cover_url
-    int author_id FK
+    int author_id
   }
 
   comments {
-    int id PK
+    int id
     string text
-    timestamptz published_at
-    int news_id FK
-    int author_id FK
+    datetime published_at
+    int news_id
+    int author_id
   }
 ```
 
