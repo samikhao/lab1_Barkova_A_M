@@ -22,10 +22,14 @@ DATABASE_URL = "postgresql+psycopg://username:password@localhost:5432/db_name"
 ```
 
 # Создание таблиц и наполнение их данными для примера:
+```bash
 alembic upgrade head
+```
 
 # Запуск
+```bash
 uvicorn app.api.main:app --reload
+```
 
 # ERD
 ```mermaid
@@ -62,7 +66,7 @@ erDiagram
 ```
 
 # Примеры работы всех эндпоинтов:
-1. Создание пользователя
+## 1. Создание пользователя
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/users/ \
   -H "Content-Type: application/json" \
@@ -80,7 +84,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/users/ \
 }
 ```
 
-2. Получение списка пользователей
+## 2. Получение списка пользователей
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/users/ | jq .
 ```
@@ -122,7 +126,7 @@ curl -s http://127.0.0.1:8000/api/v1/users/ | jq .
 ]
 ```
 
-3. Верификация пользователя
+## 3. Верификация пользователя
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/users/4/verify \
   -H "Content-Type: application/json" \
@@ -140,7 +144,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/users/4/verify \
 }
 ```
 
-4. Создание новости
+## 4. Создание новости
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/news/ \
   -H "Content-Type: application/json" \
@@ -160,7 +164,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/news/ \
 }
 ```
 
-5. Получение списка новостей
+## 5. Получение списка новостей
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/news/ | jq .
 ```
@@ -204,7 +208,7 @@ curl -s http://127.0.0.1:8000/api/v1/news/ | jq .
 ]
 ```
 
-6. Редактирование новости
+## 6. Редактирование новости
 ```bash
 curl -s -X PATCH http://127.0.0.1:8000/api/v1/news/3 \
   -H "Content-Type: application/json" \
@@ -224,7 +228,7 @@ curl -s -X PATCH http://127.0.0.1:8000/api/v1/news/3 \
 }
 ```
 
-7. Удаление новости
+## 7. Удаление новости
 ```bash
 curl -i -X DELETE http://127.0.0.1:8000/api/v1/news/3
 ```
@@ -236,7 +240,7 @@ server: uvicorn
 content-type: application/json
 ```
 
-8. Создание комментария
+## 8. Создание комментария
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/comments/ \
   -H "Content-Type: application/json" \
@@ -253,7 +257,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/comments/ \
 }
 ```
 
-9. Получение списка комментариев
+## 9. Получение списка комментариев
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/comments/ | jq .
 ```
@@ -284,7 +288,7 @@ curl -s http://127.0.0.1:8000/api/v1/comments/ | jq .
 ]
 ```
 
-10. Редактирование комментария
+## 10. Редактирование комментария
 ```bash
 curl -s -X PATCH http://127.0.0.1:8000/api/v1/comments/3 \
   -H "Content-Type: application/json" \
