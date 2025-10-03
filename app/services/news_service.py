@@ -13,7 +13,7 @@ class NewsService:
         author: User | None = self.users.get(data["author_id"])
         if not author:
             raise HTTPException(404, "author not found")
-        if not author.is_verified_author:
+        if not author.is_verified:
             raise HTTPException(403, "author is not verified to publish news")
         return self.news.create(data)
 

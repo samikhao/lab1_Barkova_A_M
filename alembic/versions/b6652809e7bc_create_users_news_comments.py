@@ -43,7 +43,7 @@ def upgrade() -> None:
         "news",
         sa.Column("id", sa.Integer(), primary_key=True, nullable=False),
         sa.Column("title", sa.String(length=250), nullable=False),
-        sa.Column("content", sa.JSON(), nullable=True),  # соответствует ORM (JSON)
+        sa.Column("content", sa.JSON(), nullable=True),
         sa.Column(
             "published_at",
             sa.TIMESTAMP(timezone=True),

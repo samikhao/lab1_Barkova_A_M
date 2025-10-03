@@ -13,7 +13,6 @@ depends_on = None
 
 
 def upgrade() -> None:
-    # пользователи — БД сама поставит registered_at и is_verified по дефолту
     op.execute(
         """
         INSERT INTO users (name, email, avatar_url)
@@ -25,7 +24,6 @@ def upgrade() -> None:
         """
     )
 
-    # новости — content без ::jsonb (столбец JSON), published_at поставит дефолт
     op.execute(
         """
         INSERT INTO news (title, content, cover_url, author_id)
@@ -53,7 +51,6 @@ def upgrade() -> None:
         """
     )
 
-    # комментарии — поле текста называется text, published_at поставит дефолт
     op.execute(
         """
         INSERT INTO comments (news_id, author_id, text)

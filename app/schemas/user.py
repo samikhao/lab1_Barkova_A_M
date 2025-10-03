@@ -20,3 +20,6 @@ class UserRead(UserBase):
     class Config:
         # для распознавания ORM-объекта pydantic'ом
         from_attributes = True
+
+class UserVerify(BaseModel):
+    is_verified: bool

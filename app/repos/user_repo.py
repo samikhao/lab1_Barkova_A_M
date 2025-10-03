@@ -20,3 +20,12 @@ class UserRepo:
 
     def get_by_email(self, email: str) -> User | None:
         return self.db.query(User).filter(User.email == email).first()
+    
+    def set_verified(self, user_id: int, value: bool) -> User | None:
+        user = self.get(user_id)
+        if not user:
+            return None
+        user.is_verified = value
+        self.db.commit()
+        self.db.refresh(user)
+        return user
