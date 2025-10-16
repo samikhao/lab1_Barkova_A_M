@@ -27,7 +27,7 @@ from app.schemas.auth import (
     SessionPublic,
 )
 
-router = APIRouter(prefix="/auth", tags=["auth"])
+router = APIRouter(tags=["auth"])
 
 @router.post("/register", response_model=TokenPair, status_code=201)
 def register(req: RegisterRequest, request: Request, db: Session = Depends(get_db)) -> TokenPair:
