@@ -116,34 +116,36 @@ async def github_login():
 
 @router.get("/github/callback", response_model=TokenPair)
 async def github_callback(request: Request, db: Session = Depends(get_db)) -> TokenPair:
-    async with sso.verify_and_process(request) as gh_user:
-        if not gh_user:
-            raise HTTPException(status_code=401, detail="GitHub auth failed")
+    async with sso:
+        gh_user = await sso.verify_and_process(request)
 
-        user = db.query(User).filter(User.github_id == str(gh_user.id)).one_or_none()
-        if not user:
-            if gh_user.email:
-                user = db.query(User).filter(User.email == gh_user.email).one_or_none()
-            if user:
-                user.github_id = str(gh_user.id)
-                if gh_user.picture and not user.avatar_url:
-                    user.avatar_url = gh_user.picture
-            else:
-                user = User(
-                    name=gh_user.display_name or "GitHub User",
-                    email=gh_user.email or f"gh_{gh_user.id}@example.com",
-                    github_id=str(gh_user.id),
-                    avatar_url=gh_user.picture,
-                )
-                db.add(user)
-            db.commit()
-            db.refresh(user)
+    if not gh_user:
+        raise HTTPException(status_code=401, detail="GitHub auth failed")
 
-        access = create_access_token(user)
-        refresh = create_refresh_session(
-            db,
-            user,
-            user_agent=request.headers.get("User-Agent"),
-            ip=(request.client.host if request.client else None),
-        )
-        return TokenPair(access=access, refresh=refresh)
+    user = db.query(User).filter(User.github_id == str(gh_user.id)).one_or_none()
+    if not user:
+        if gh_user.email:
+            user = db.query(User).filter(User.email == gh_user.email).one_or_none()
+        if user:
+            user.github_id = str(gh_user.id)
+            if gh_user.picture and not user.avatar_url:
+                user.avatar_url = gh_user.picture
+        else:
+            user = User(
+                name=gh_user.display_name or "GitHub User",
+                email=gh_user.email or f"gh_{gh_user.id}@example.com",
+                github_id=str(gh_user.id),
+                avatar_url=gh_user.picture,
+            )
+            db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    access = create_access_token(user)
+    refresh = create_refresh_session(
+        db,
+        user,
+        user_agent=request.headers.get("User-Agent"),
+        ip=(request.client.host if request.client else None),
+    )
+    return TokenPair(access=access, refresh=refresh)
