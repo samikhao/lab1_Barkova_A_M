@@ -1,5 +1,6 @@
 from fastapi import Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
+from jose import JWTError
 
 from app.db.session import get_db
 from app.repos.user_repo import UserRepo
@@ -27,7 +28,12 @@ def _bearer(request: Request) -> str:
 
 
 def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
-    payload = decode_token(_bearer(request))
+    token = _bearer(request)
+    try:
+        payload = decode_token(token)
+    except JWTError:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+
     user = db.query(User).get(payload["uid"])
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
