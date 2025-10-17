@@ -21,7 +21,7 @@ def list_users(repos=Depends(get_repos)):
 @router.post("/{user_id}/verify", response_model=UserRead)
 def verify_user(user_id: int, payload: UserVerify, db: Session = Depends(get_db)):
     repo = UserRepo(db)
-    user = repo.set_verified(user_id, payload.is_verified)
+    user = repo.set_verified(user_id, payload.is_verified_author)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
