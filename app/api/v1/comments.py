@@ -12,15 +12,15 @@ def _service(repos):
     )
 
 @router.post("/", response_model=CommentRead, status_code=201)
-def create_comment(payload: CommentCreate, repos=Depends(get_repos), user: User = Depends(get_current_user)):
+async def create_comment(payload: CommentCreate, repos=Depends(get_repos), user: User = Depends(get_current_user)):
     svc = _service(repos)
-    return svc.create(payload.model_dump() | {"author_id": user.id})
+    return await svc.create(payload.model_dump() | {"author_id": user.id})
 
 @router.get("/", response_model=list[CommentRead])
-def list_comments(repos=Depends(get_repos)):
-    return repos["comments"].list()
+async def list_comments(repos=Depends(get_repos)):
+    return await repos["comments"].list()
 
 @router.patch("/{comment_id}", response_model=CommentRead, dependencies=[Depends(require_comment_owner_or_admin)])
-def update_comment(comment_id: int, payload: CommentUpdate, repos=Depends(get_repos)):
+async def update_comment(comment_id: int, payload: CommentUpdate, repos=Depends(get_repos)):
     svc = _service(repos)
-    return svc.update(comment_id, payload.model_dump(exclude_unset=True))
+    return await svc.update(comment_id, payload.model_dump(exclude_unset=True))

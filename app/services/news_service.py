@@ -9,22 +9,22 @@ class NewsService:
         self.users = users
         self.news = news
 
-    def create(self, data: dict) -> News:
+    async def create(self, data: dict) -> News:
         author: User | None = self.users.get(data["author_id"])
         if not author:
             raise HTTPException(404, "author not found")
         if not author.is_verified_author:
             raise HTTPException(403, "author is not verified to publish news")
-        return self.news.create(data)
+        return await self.news.create(data)
 
-    def update(self, news_id: int, data: dict) -> News:
-        news = self.news.get(news_id)
+    async def update(self, news_id: int, data: dict) -> News:
+        news = await self.news.get(news_id)
         if not news:
             raise HTTPException(404, "news not found")
-        return self.news.update(news_id, data)
+        return await self.news.update(news_id, data)
 
-    def delete(self, news_id: int) -> None:
-        news = self.news.get(news_id)
+    async def delete(self, news_id: int) -> None:
+        news = await self.news.get(news_id)
         if not news:
             raise HTTPException(404, "news not found")
-        self.news.delete(news_id)
+        await self.news.delete(news_id)
