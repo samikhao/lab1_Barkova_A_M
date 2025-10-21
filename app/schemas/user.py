@@ -15,11 +15,11 @@ class UserCreate(UserBase):
 class UserRead(UserBase):
     id: int
     registered_at: datetime
-    is_verified: bool
+    is_verified_author: bool
 
     class Config:
         # для распознавания ORM-объекта pydantic'ом
         from_attributes = True
 
 class UserVerify(BaseModel):
-    is_verified: bool
+    is_verified_author: bool

@@ -8,7 +8,6 @@ class CommentBase(BaseModel):
 
 class CommentCreate(CommentBase):
     news_id: int
-    author_id: int
 
 
 class CommentUpdate(BaseModel):

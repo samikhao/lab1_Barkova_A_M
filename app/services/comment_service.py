@@ -10,15 +10,15 @@ class CommentService:
         self.news = news
         self.users = users
 
-    def create(self, data: dict) -> Comment:
-        if not self.news.get(data["news_id"]):
+    async def create(self, data: dict) -> Comment:
+        if not await self.news.get(data["news_id"]):
             raise HTTPException(404, "news not found")
-        if not self.users.get(data["author_id"]):
+        if not await self.users.get(data["author_id"]):
             raise HTTPException(404, "author not found")
-        return self.comments.create(data)
+        return await self.comments.create(data)
 
-    def update(self, comment_id: int, data: dict) -> Comment:
-        obj = self.comments.get(comment_id)
-        if not obj:
+    async def update(self, comment_id: int, data: dict) -> Comment:
+        comment = await self.comments.get(comment_id)
+        if not comment:
             raise HTTPException(404, "comment not found")
-        return self.comments.update(comment_id, data)
+        return await self.comments.update(comment_id, data)

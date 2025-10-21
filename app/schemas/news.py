@@ -10,7 +10,7 @@ class NewsBase(BaseModel):
 
 
 class NewsCreate(NewsBase):
-    author_id: int
+    pass
 
 
 class NewsUpdate(BaseModel):
