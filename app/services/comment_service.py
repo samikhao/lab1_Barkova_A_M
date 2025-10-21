@@ -18,7 +18,7 @@ class CommentService:
         return self.comments.create(data)
 
     def update(self, comment_id: int, data: dict) -> Comment:
-        obj = self.comments.get(comment_id)
-        if not obj:
+        comment = self.comments.get(comment_id)
+        if not comment:
             raise HTTPException(404, "comment not found")
         return self.comments.update(comment_id, data)

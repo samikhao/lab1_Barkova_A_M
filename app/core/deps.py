@@ -1,6 +1,6 @@
-from fastapi import Depends, HTTPException, status, Request
-from sqlalchemy.orm import Session
-from jose import JWTError
+from fastapi import Depends, HTTPException, Request
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 
 from app.db.session import get_db
 from app.repos.user_repo import UserRepo
@@ -12,7 +12,7 @@ from app.models.news import News
 from app.models.comment import Comment
 from app.core.security import decode_token
 
-def get_repos(db: Session = Depends(get_db)):
+async def get_repos(db: AsyncSession = Depends(get_db)):
     return {
         "users": UserRepo(db),
         "news": NewsRepo(db),
@@ -23,54 +23,54 @@ def get_repos(db: Session = Depends(get_db)):
 def _bearer(request: Request) -> str:
     auth = request.headers.get("Authorization")
     if not auth or not auth.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
+        raise HTTPException(status_code=401, detail="Missing bearer token")
     return auth.split(" ", 1)[1]
 
 
-def get_current_user(request: Request, db: Session = Depends(get_db)) -> User:
+async def get_current_user(request: Request, db: AsyncSession = Depends(get_db)) -> User:
     token = _bearer(request)
     try:
         payload = decode_token(token)
-    except JWTError:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
+    except Exception:
+        raise HTTPException(status_code=401, detail="Invalid token")
 
-    user = db.query(User).get(payload["uid"])
+    user = await db.get(User, payload["uid"])
     if not user:
         raise HTTPException(status_code=401, detail="User not found")
     return user
 
 
-def resolve_news(news_id: int, db: Session = Depends(get_db)) -> News:
-    news = db.query(News).get(news_id)
+async def resolve_news(news_id: int, db: AsyncSession = Depends(get_db)) -> News:
+    news = await db.get(News, news_id)
     if not news:
         raise HTTPException(status_code=404, detail="News not found")
     return news
 
 
-def resolve_comment(comment_id: int, db: Session = Depends(get_db)) -> Comment:
-    comment = db.query(Comment).get(comment_id)
+async def resolve_comment(comment_id: int, db: AsyncSession = Depends(get_db)) -> Comment:
+    comment = await db.get(Comment, comment_id)
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found")
     return comment
 
 
-def require_authenticated(user: User = Depends(get_current_user)) -> User:
+async def require_authenticated(user: User = Depends(get_current_user)) -> User:
     return user
 
 
-def require_admin(user: User = Depends(get_current_user)) -> User:
+async def require_admin(user: User = Depends(get_current_user)) -> User:
     if not user.is_admin:
         raise HTTPException(status_code=403, detail="Admin only")
     return user
 
 
-def require_author_verified(user: User = Depends(get_current_user)) -> User:
+async def require_author_verified(user: User = Depends(get_current_user)) -> User:
     if not (user.is_verified_author or user.is_admin):
         raise HTTPException(status_code=403, detail="Author verification required")
     return user
 
 
-def require_news_owner_or_admin(
+async def require_news_owner_or_admin(
     news: News = Depends(resolve_news),
     user: User = Depends(get_current_user),
 ) -> News:
@@ -79,7 +79,7 @@ def require_news_owner_or_admin(
     return news
 
 
-def require_comment_owner_or_admin(
+async def require_comment_owner_or_admin(
     comment: Comment = Depends(resolve_comment),
     user: User = Depends(get_current_user),
 ) -> Comment:

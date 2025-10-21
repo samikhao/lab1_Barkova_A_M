@@ -1,32 +1,34 @@
-from sqlalchemy.orm import Session
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.news import News
 
 class NewsRepo:
-    def __init__(self, db: Session):
+    def __init__(self, db: AsyncSession):
         self.db = db
 
-    def create(self, data: dict) -> News:
+    async def create(self, data: dict) -> News:
         obj = News(**data)
         self.db.add(obj)
-        self.db.commit()
-        self.db.refresh(obj)
+        await self.db.commit()
+        await self.db.refresh(obj)
         return obj
 
-    def list(self) -> list[News]:
-        return self.db.query(News).order_by(News.id).all()
+    async def list(self) -> list[News]:
+        res = await self.db.scalars(select(News).order_by(News.id))
+        return res.all()
 
-    def get(self, news_id: int) -> News | None:
-        return self.db.get(News, news_id)
+    async def get(self, news_id: int) -> News | None:
+        return await self.db.get(News, news_id)
 
-    def update(self, news_id: int, data: dict) -> News:
-        obj = self.db.get(News, news_id)
+    async def update(self, news_id: int, data: dict) -> News:
+        obj = await self.db.get(News, news_id)
         for k, v in data.items():
             setattr(obj, k, v)
-        self.db.commit()
-        self.db.refresh(obj)
+        await self.db.commit()
+        await self.db.refresh(obj)
         return obj
 
-    def delete(self, news_id: int) -> None:
-        obj = self.db.get(News, news_id)
-        self.db.delete(obj)
-        self.db.commit()
+    async def delete(self, news_id: int) -> None:
+        obj = await self.db.get(News, news_id)
+        await self.db.delete(obj)
+        await self.db.commit()

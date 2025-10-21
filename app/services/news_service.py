@@ -18,13 +18,13 @@ class NewsService:
         return self.news.create(data)
 
     def update(self, news_id: int, data: dict) -> News:
-        obj = self.news.get(news_id)
-        if not obj:
+        news = self.news.get(news_id)
+        if not news:
             raise HTTPException(404, "news not found")
         return self.news.update(news_id, data)
 
     def delete(self, news_id: int) -> None:
-        obj = self.news.get(news_id)
-        if not obj:
+        news = self.news.get(news_id)
+        if not news:
             raise HTTPException(404, "news not found")
         self.news.delete(news_id)

@@ -21,7 +21,7 @@ cp .env.example .env
 ```
 Установить PostgreSQL и создать базу данных. Указать в .env ссылку вида:
 ```python
-DATABASE_URL = "postgresql+psycopg://username:password@localhost:5432/db_name"
+DATABASE_URL = "postgresql+asyncpg://username:password@localhost:5432/db_name"
 ```
 Заполнить .env своими данными.
 
