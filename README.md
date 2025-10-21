@@ -114,7 +114,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/auth/login \
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/auth/refresh \
   -H "Content-Type: application/json" \
-  -d "{\"refresh\":\"<REFRESH_TOKEN>\"}" | jq .
+  -d "{\"refresh\":\"$REFRESH_TOKEN\"}" | jq .
 ```
 
 Ответ сервера:
@@ -129,27 +129,51 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/auth/refresh \
 ```bash
 curl -i -X POST http://127.0.0.1:8000/api/v1/auth/logout \
   -H "Content-Type: application/json" \
-  -d "{\"refresh\":\"<REFRESH_TOKEN>\"}"
-
+  -d "{\"refresh\":\"$REFRESH_TOKEN\"}"
 ```
 
 ## 6. Мои сессии
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/auth/sessions \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" | jq .
-
+  -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
 ```
 
 Ответ сервера:
 ```json
-{
-  "id": 15,
-  "user_agent": "curl/8.7.1",
-  "ip": "127.0.0.1",
-  "created_at": "2025-10-17T14:26:04.072362+03:00",
-  "expires_at": "2025-10-31T14:26:04.072336+03:00",
-  "revoked": false
-}
+[
+  {
+    "id": 4,
+    "user_agent": "curl/8.7.1",
+    "ip": "127.0.0.1",
+    "created_at": "2025-10-21T13:32:07.722354Z",
+    "expires_at": "2025-11-04T13:32:07.722022Z",
+    "revoked": false
+  },
+  {
+    "id": 3,
+    "user_agent": "curl/8.7.1",
+    "ip": "127.0.0.1",
+    "created_at": "2025-10-21T13:31:01.044560Z",
+    "expires_at": "2025-11-04T13:31:01.043766Z",
+    "revoked": true
+  },
+  {
+    "id": 2,
+    "user_agent": "curl/8.7.1",
+    "ip": "127.0.0.1",
+    "created_at": "2025-10-21T13:29:28.571652Z",
+    "expires_at": "2025-11-04T13:29:28.571377Z",
+    "revoked": true
+  },
+  {
+    "id": 1,
+    "user_agent": "curl/8.7.1",
+    "ip": "127.0.0.1",
+    "created_at": "2025-10-21T13:28:51.670627Z",
+    "expires_at": "2025-11-04T13:28:51.669924Z",
+    "revoked": false
+  }
+]
 ```
 
 ## 7. GitHub OAuth
@@ -167,7 +191,7 @@ curl -s http://127.0.0.1:8000/api/v1/auth/sessions \
 ## 8. Список пользователей
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/users/ \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" | jq .
+  -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
 ```
 
 Ответ сервера:
@@ -178,7 +202,7 @@ curl -s http://127.0.0.1:8000/api/v1/users/ \
     "email": "alice@example.com",
     "avatar_url": null,
     "id": 1,
-    "registered_at": "2025-10-16T21:38:08.546018+03:00",
+    "registered_at": "2025-10-21T13:28:26.267324Z",
     "is_verified_author": false
   },
   {
@@ -186,7 +210,7 @@ curl -s http://127.0.0.1:8000/api/v1/users/ \
     "email": "bob@example.com",
     "avatar_url": null,
     "id": 2,
-    "registered_at": "2025-10-16T21:38:08.546018+03:00",
+    "registered_at": "2025-10-21T13:28:26.267324Z",
     "is_verified_author": false
   },
   {
@@ -194,7 +218,7 @@ curl -s http://127.0.0.1:8000/api/v1/users/ \
     "email": "eve@example.com",
     "avatar_url": null,
     "id": 3,
-    "registered_at": "2025-10-16T21:38:08.546018+03:00",
+    "registered_at": "2025-10-21T13:28:26.267324Z",
     "is_verified_author": false
   },
   {
@@ -202,7 +226,7 @@ curl -s http://127.0.0.1:8000/api/v1/users/ \
     "email": "jack@example.com",
     "avatar_url": null,
     "id": 4,
-    "registered_at": "2025-10-17T14:11:04.318659+03:00",
+    "registered_at": "2025-10-21T13:28:51.599500Z",
     "is_verified_author": false
   }
 ]
@@ -210,8 +234,8 @@ curl -s http://127.0.0.1:8000/api/v1/users/ \
 
 ## 9. Верификация пользователей админом
 ```bash
-curl -s -X POST http://127.0.0.1:8000/api/v1/users/1/verify \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+curl -s -X POST http://127.0.0.1:8000/api/v1/users/4/verify \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"is_verified_author": true}' | jq .
 ```
@@ -219,19 +243,19 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/users/1/verify \
 Ответ сервера:
 ```json
 {
-  "name": "Alice",
-  "email": "alice@example.com",
+  "name": "Jack",
+  "email": "jack@example.com",
   "avatar_url": null,
-  "id": 1,
-  "registered_at": "2025-10-16T21:38:08.546018+03:00",
-  "is_verified_author": false
+  "id": 4,
+  "registered_at": "2025-10-21T13:28:51.599500Z",
+  "is_verified_author": true
 }
 ```
 
 ## 10. Список новостей
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/news/ \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" | jq .
+  -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
 ```
 
 Ответ сервера:
@@ -243,7 +267,23 @@ curl -s http://127.0.0.1:8000/api/v1/news/ \
       "blocks": [
         "seed post 1"
       ]
-    }
+    },
+    "cover_url": null,
+    "id": 1,
+    "published_at": "2025-10-21T13:28:26.267324Z",
+    "author_id": 1
+  },
+  {
+    "title": "Bob's update",
+    "content": {
+      "blocks": [
+        "seed post 2"
+      ]
+    },
+    "cover_url": null,
+    "id": 2,
+    "published_at": "2025-10-21T13:28:26.267324Z",
+    "author_id": 2
   }
 ]
 ```
@@ -251,7 +291,7 @@ curl -s http://127.0.0.1:8000/api/v1/news/ \
 ## 11. Создание новости
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/news/ \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title":"First post","content":{"text":"hello"},"cover_url":null}' | jq .
 ```
@@ -264,16 +304,16 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/news/ \
     "text": "hello"
   },
   "cover_url": null,
-  "id": 4,
-  "published_at": "2025-10-17T14:34:15.663132+03:00",
-  "author_id": 6
+  "id": 3,
+  "published_at": "2025-10-21T13:35:51.068596Z",
+  "author_id": 4
 }
 ```
 
 ## 12. Редактирование своей новости
 ```bash
-curl -s -X PATCH http://127.0.0.1:8000/api/v1/news/4 \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+curl -s -X PATCH http://127.0.0.1:8000/api/v1/news/3 \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"title":"Updated title"}' | jq .
 ```
@@ -286,22 +326,22 @@ curl -s -X PATCH http://127.0.0.1:8000/api/v1/news/4 \
     "text": "hello"
   },
   "cover_url": null,
-  "id": 4,
-  "published_at": "2025-10-17T14:34:15.663132+03:00",
-  "author_id": 6
+  "id": 3,
+  "published_at": "2025-10-21T13:35:51.068596Z",
+  "author_id": 4
 }
 ```
 
 ## 13. Удаление новости
 ```bash
-curl -i -X DELETE http://127.0.0.1:8000/api/v1/news/1 \
-  -H "Authorization: Bearer <ACCESS_TOKEN>"
+curl -i -X DELETE http://127.0.0.1:8000/api/v1/news/3 \
+  -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
 
 ## 14. Список комментариев
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/comments/ \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" | jq .
+  -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
 ```
 
 Ответ сервера:
@@ -310,14 +350,14 @@ curl -s http://127.0.0.1:8000/api/v1/comments/ \
   {
     "text": "seed comment 1",
     "id": 1,
-    "published_at": "2025-10-16T21:38:08.546018+03:00",
+    "published_at": "2025-10-21T13:28:26.267324Z",
     "news_id": 1,
     "author_id": 3
   },
   {
     "text": "seed comment 2",
     "id": 2,
-    "published_at": "2025-10-16T21:38:08.546018+03:00",
+    "published_at": "2025-10-21T13:28:26.267324Z",
     "news_id": 2,
     "author_id": 1
   }
@@ -327,7 +367,7 @@ curl -s http://127.0.0.1:8000/api/v1/comments/ \
 ## 15. Создание комментария
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/comments/ \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"text":"nice post!","news_id":1}' | jq .
 ```
@@ -336,17 +376,17 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/comments/ \
 ```json
 {
   "text": "nice post!",
-  "id": 8,
-  "published_at": "2025-10-17T14:34:15.664481+03:00",
+  "id": 3,
+  "published_at": "2025-10-21T13:37:18.635393Z",
   "news_id": 1,
-  "author_id": 6
+  "author_id": 4
 }
 ```
 
 ## 16. Редактирование комментария
 ```bash
-curl -s -X PATCH http://127.0.0.1:8000/api/v1/comments/8 \
-  -H "Authorization: Bearer <ACCESS_TOKEN>" \
+curl -s -X PATCH http://127.0.0.1:8000/api/v1/comments/3 \
+  -H "Authorization: Bearer $ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"text":"edited comment"}' | jq .
 ```
@@ -355,9 +395,9 @@ curl -s -X PATCH http://127.0.0.1:8000/api/v1/comments/8 \
 ```json
 {
   "text": "edited comment",
-  "id": 8,
-  "published_at": "2025-10-17T14:34:15.664481+03:00",
+  "id": 3,
+  "published_at": "2025-10-21T13:37:18.635393Z",
   "news_id": 1,
-  "author_id": 6
+  "author_id": 4
 }
 ```
