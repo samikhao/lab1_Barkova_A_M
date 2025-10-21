@@ -10,7 +10,7 @@ class NewsService:
         self.news = news
 
     async def create(self, data: dict) -> News:
-        author: User | None = self.users.get(data["author_id"])
+        author: User | None = await self.users.get(data["author_id"])
         if not author:
             raise HTTPException(404, "author not found")
         if not author.is_verified_author:

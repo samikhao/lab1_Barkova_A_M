@@ -15,7 +15,7 @@ class CommentService:
             raise HTTPException(404, "news not found")
         if not await self.users.get(data["author_id"]):
             raise HTTPException(404, "author not found")
-        return self.comments.create(data)
+        return await self.comments.create(data)
 
     async def update(self, comment_id: int, data: dict) -> Comment:
         comment = await self.comments.get(comment_id)
