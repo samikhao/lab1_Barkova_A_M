@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta, timezone
-from typing import TypedDict, Tuple
+from typing import TypedDict
 
 from argon2 import PasswordHasher
 from argon2.exceptions import VerifyMismatchError
-from jose import jwt, JWTError
-from sqlalchemy.orm import Session
+from jose import jwt
 
 from app.core.config import settings
 from app.models.user import User
-from app.models.refresh_session import RefreshSession
 
 
 _ph = PasswordHasher()
@@ -65,67 +63,14 @@ def decode_token(token: str) -> TokenPayload:
     return payload
 
 
-def create_refresh_session(db: Session, user: User, user_agent: str | None, ip: str | None) -> str:
-    exp_dt = _exp_days(settings.REFRESH_TTL_DAYS)
+def create_refresh_token(user: User) -> tuple[str, datetime]:
+    exp = _exp_days(settings.REFRESH_TTL_DAYS)
     payload: TokenPayload = {
         "sub": str(user.email),
         "uid": int(user.id),
         "is_admin": bool(user.is_admin),
         "is_verified_author": bool(getattr(user, "is_verified_author", False)),
-        "exp": int(exp_dt.timestamp()),
+        "exp": int(exp.timestamp()),
     }
-    refresh_token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
-
-    sess = RefreshSession(
-        user_id=user.id,
-        refresh_token=refresh_token,
-        user_agent=user_agent,
-        ip=ip,
-        created_at=_now(),
-        expires_at=exp_dt,
-        revoked=False,
-    )
-    db.add(sess)
-    db.commit()
-    return refresh_token
-
-def rotate_refresh_session(db: Session, refresh_token: str, user_agent: str | None, ip: str | None) -> Tuple[str, str]:
-    try:
-        payload = decode_token(refresh_token)
-    except JWTError as e:
-        raise ValueError("Invalid refresh token") from e
-
-    sess = (
-        db.query(RefreshSession)
-        .filter(RefreshSession.refresh_token == refresh_token, RefreshSession.revoked.is_(False))
-        .one_or_none()
-    )
-    if sess is None:
-        raise ValueError("Refresh session not found or revoked")
-    if sess.expires_at <= _now():
-        sess.revoked = True
-        db.commit()
-        raise ValueError("Refresh session expired")
-
-    user = db.query(User).get(payload["uid"])
-    if user is None:
-        sess.revoked = True
-        db.commit()
-        raise ValueError("User not found")
-
-    sess.revoked = True
-    db.commit()
-
-    new_access = create_access_token(user)
-    new_refresh = create_refresh_session(db, user, user_agent=user_agent, ip=ip)
-    return new_access, new_refresh
-
-def revoke_refresh_session(db: Session, refresh_token: str) -> None:
-    sess = (
-        db.query(RefreshSession)
-        .filter(RefreshSession.refresh_token == refresh_token, RefreshSession.revoked.is_(False))
-        .one_or_none()
-    )
-    if sess:
-        sess.revoked = True
-        db.commit()
+    token = jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+    return token, exp
