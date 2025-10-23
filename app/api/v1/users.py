@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.schemas.user import UserCreate, UserRead, UserVerify
 from app.repos.user_repo import UserRepo
-from app.core.deps import get_repos, get_db
+from app.core.deps import get_repos, get_db, require_admin
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -18,7 +18,7 @@ async def list_users(repos=Depends(get_repos)):
     users: UserRepo = repos["users"]
     return await users.list()
 
-@router.post("/{user_id}/verify", response_model=UserRead)
+@router.post("/{user_id}/verify", response_model=UserRead, dependencies=[Depends(require_admin)])
 async def verify_user(user_id: int, payload: UserVerify, db: AsyncSession = Depends(get_db)):
     repo = UserRepo(db)
     user = await repo.set_verified(user_id, payload.is_verified_author)
