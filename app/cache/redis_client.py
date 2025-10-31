@@ -11,7 +11,7 @@ async def init_redis() -> redis.Redis:
         redis_client = redis.from_url(
             settings.REDIS_URL,
             decode_responses=False,
-            encoding=None,
+            encoding="utf-8",
             health_check_interval=30,
         )
     return redis_client
