@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 
 from fastapi import HTTPException, Request
 from jose import JWTError
-from sqlalchemy import select, update
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
@@ -19,7 +19,6 @@ from app.core.security import (
     decode_token,
 )
 from app.models.user import User
-from app.models.refresh_session import RefreshSession
 from app.repos.user_repo import UserRepo
 from app.schemas.auth import (
     RegisterRequest, LoginRequest, TokenPair, RefreshRequest, LogoutRequest, SessionPublic
@@ -178,10 +177,6 @@ class AuthService:
         await self._rs_revoke(req.refresh)
 
     async def list_sessions(self, user: User) -> list[SessionPublic]:
-        """
-        Возвращаем список активных refresh-сессий из Redis.
-        Поле id синтетическое (по хэшу), revoked всегда False (ключ существует).
-        """
         rows = await self._rs_list_for_user(user.id)
         out: list[SessionPublic] = []
         for r in rows:
