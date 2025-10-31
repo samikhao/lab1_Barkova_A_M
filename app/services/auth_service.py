@@ -1,11 +1,16 @@
 from __future__ import annotations
 
+import hashlib
+import logging
+from typing import Any
 from datetime import datetime, timezone
+
 from fastapi import HTTPException, Request
 from jose import JWTError
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.security import (
     hash_password,
     verify_password,
@@ -20,43 +25,98 @@ from app.schemas.auth import (
     RegisterRequest, LoginRequest, TokenPair, RefreshRequest, LogoutRequest, SessionPublic
 )
 
+from app.cache.redis_client import get_redis
+from app.cache.codec import encode, decode
+from app.cache import keys
+
+
+logger = logging.getLogger("cache.auth")
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _to_iso(dt: datetime) -> str:
+    return dt.astimezone(timezone.utc).isoformat()
+
+
+def _from_iso(s: str) -> datetime:
+    return datetime.fromisoformat(s)
+
+
+def _sha256(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _hash_to_int(h: str) -> int:
+    try:
+        return int(h[:8], 16)
+    except Exception:
+        return 0
+
+
+def _refresh_ttl_seconds() -> int:
+    return int(settings.REFRESH_TTL_DAYS) * 24 * 60 * 60
+
 class AuthService:
     def __init__(self, db: AsyncSession):
         self.db = db
         self.users = UserRepo(db)
 
-    async def _rs_create(self, *, user_id: int, token: str, ua: str | None, ip: str | None, expires_at):
-        obj = RefreshSession(
-            user_id=user_id, refresh_token=token, user_agent=ua, ip=ip, expires_at=expires_at
-        )
-        self.db.add(obj)
-        await self.db.commit()
-        await self.db.refresh(obj)
-        return obj
+    async def _rs_create(self, *, user_id: int, token: str, ua: str | None, ip: str | None, expires_at: datetime):
+        r = await get_redis()
+        h = _sha256(token)
+        key = keys.session(h)
+        value: dict[str, Any] = {
+            "hash": h,
+            "user_id": user_id,
+            "user_agent": ua,
+            "ip": ip,
+            "created_at": _to_iso(_now()),
+            "expires_at": _to_iso(expires_at),
+        }
+        await r.setex(key, _refresh_ttl_seconds(), encode(value))
+        logger.info("session SET: %s", key)
+        return value
 
-    async def _rs_find_active(self, token: str) -> RefreshSession | None:
-        return await self.db.scalar(
-            select(RefreshSession).where(
-                RefreshSession.refresh_token == token,
-                RefreshSession.revoked.is_(False),
-            )
-        )
+    async def _rs_find_active(self, token: str) -> dict[str, Any] | None:
+        r = await get_redis()
+        h = _sha256(token)
+        key = keys.session(h)
+        data = decode(await r.get(key))
+        if not data:
+            logger.info("session MISS: %s", key)
+            return None
+        try:
+            exp = _from_iso(data["expires_at"])
+            if exp <= _now():
+                logger.info("session EXPIRED: %s", key)
+                return None
+        except Exception:
+            logger.info("session CORRUPT: %s", key)
+            return None
+        logger.info("session HIT: %s", key)
+        return data
 
     async def _rs_revoke(self, token: str) -> None:
-        await self.db.execute(
-            update(RefreshSession)
-            .where(RefreshSession.refresh_token == token, RefreshSession.revoked.is_(False))
-            .values(revoked=True)
-        )
-        await self.db.commit()
+        r = await get_redis()
+        h = _sha256(token)
+        key = keys.session(h)
+        await r.delete(key)
+        logger.info("session DEL: %s", key)
 
-    async def _rs_list_for_user(self, user_id: int) -> list[RefreshSession]:
-        res = await self.db.scalars(
-            select(RefreshSession)
-            .where(RefreshSession.user_id == user_id)
-            .order_by(RefreshSession.created_at.desc())
-        )
-        return res.all()
+    async def _rs_list_for_user(self, user_id: int) -> list[dict[str, Any]]:
+        r = await get_redis()
+        pattern = f"{settings.CACHE_PREFIX}:session:*"
+        result: list[dict[str, Any]] = []
+        async for key in r.scan_iter(match=pattern):
+            data = decode(await r.get(key))
+            if not data:
+                continue
+            if int(data.get("user_id", -1)) != int(user_id):
+                continue
+            result.append(data)
+        return result
 
     @staticmethod
     def _ua_ip(request: Request) -> tuple[str | None, str | None]:
@@ -95,9 +155,14 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid refresh token")
 
         sess = await self._rs_find_active(req.refresh)
-        if not sess:
-            raise HTTPException(status_code=401, detail="Refresh session not found or revoked")
-        if sess.expires_at <= datetime.now(timezone.utc):
+
+        try:
+            expires_at = _from_iso(sess["expires_at"])
+        except Exception:
+            await self._rs_revoke(req.refresh)
+            raise HTTPException(status_code=401, detail="Corrupted session data")
+        
+        if expires_at <= datetime.now(timezone.utc):
             await self._rs_revoke(req.refresh)
             raise HTTPException(status_code=401, detail="Refresh session expired")
 
@@ -113,17 +178,29 @@ class AuthService:
         await self._rs_revoke(req.refresh)
 
     async def list_sessions(self, user: User) -> list[SessionPublic]:
+        """
+        Возвращаем список активных refresh-сессий из Redis.
+        Поле id синтетическое (по хэшу), revoked всегда False (ключ существует).
+        """
         rows = await self._rs_list_for_user(user.id)
-        return [
-            SessionPublic(
-                id=r.id,
-                user_agent=r.user_agent,
-                ip=r.ip,
-                created_at=r.created_at,
-                expires_at=r.expires_at,
-                revoked=r.revoked,
-            ) for r in rows
-        ]
+        out: list[SessionPublic] = []
+        for r in rows:
+            try:
+                created = _from_iso(r["created_at"])
+                expires = _from_iso(r["expires_at"])
+                sid = _hash_to_int(r["hash"])
+                out.append(SessionPublic(
+                    id=sid,
+                    user_agent=r.get("user_agent"),
+                    ip=r.get("ip"),
+                    created_at=created,
+                    expires_at=expires,
+                    revoked=False,
+                ))
+            except Exception:
+                continue
+        out.sort(key=lambda x: x.created_at, reverse=True)
+        return out
 
     async def github_callback(self, request: Request, sso) -> TokenPair:
         async with sso:
