@@ -54,7 +54,7 @@ async def my_sessions(user: User = Depends(get_current_user), db: AsyncSession =
 
 @router.get("/github/login")
 async def github_login(db: AsyncSession = Depends(get_db)):
-    return svc(db).github_login(sso)
+    return await svc(db).github_login(sso)
 
 @router.get("/github/callback", response_model=TokenPair)
 async def github_callback(request: Request, db: AsyncSession = Depends(get_db)) -> TokenPair:

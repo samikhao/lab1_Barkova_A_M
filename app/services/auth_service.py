@@ -6,6 +6,9 @@ from typing import Any
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, Request
+from fastapi.responses import RedirectResponse
+from oauthlib.oauth2.rfc6749.errors import CustomOAuth2Error
+from fastapi_sso.sso.github import GithubSSO
 from jose import JWTError
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -197,9 +200,14 @@ class AuthService:
         out.sort(key=lambda x: x.created_at, reverse=True)
         return out
 
-    async def github_callback(self, request: Request, sso) -> TokenPair:
-        async with sso:
-            gh_user = await sso.verify_and_process(request)
+    async def github_callback(self, request: Request, sso: GithubSSO) -> TokenPair:
+        login_url = str(request.url_for("github_login"))
+
+        try:
+            async with sso:
+                gh_user = await sso.verify_and_process(request)
+        except CustomOAuth2Error:
+            return RedirectResponse(login_url, status_code=303)
         if not gh_user:
             raise HTTPException(status_code=401, detail="GitHub auth failed")
 
@@ -224,5 +232,5 @@ class AuthService:
 
         return await self._issue_tokens(user, request)
 
-    async def github_login(self, sso):
-        return sso.get_login_redirect()
+    async def github_login(self, sso: GithubSSO):
+        return await sso.get_login_redirect()
