@@ -225,4 +225,4 @@ class AuthService:
         return await self._issue_tokens(user, request)
 
     async def github_login(self, sso):
-        return await sso.get_login_redirect()
+        return sso.get_login_redirect()
