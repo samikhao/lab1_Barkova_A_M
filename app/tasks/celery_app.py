@@ -2,6 +2,7 @@ from celery import Celery
 from celery.schedules import crontab
 
 from app.core.config import settings
+import app.db.base
 
 celery_app = Celery(
     "web_lab1",
@@ -23,3 +24,5 @@ celery_app.conf.beat_schedule = {
         "schedule": crontab(day_of_week="sun", hour=9, minute=0),
     }
 }
+
+from app.tasks import news_notifications
