@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.news import News
@@ -15,6 +17,14 @@ class NewsRepo:
 
     async def list(self) -> list[News]:
         res = await self.db.scalars(select(News).order_by(News.id))
+        return res.all()
+
+    async def list_since(self, dt_from: datetime) -> list[News]:
+        res = await self.db.scalars(
+            select(News)
+            .where(News.published_at >= dt_from)
+            .order_by(News.published_at)
+        )
         return res.all()
 
     async def get(self, news_id: int) -> News | None:

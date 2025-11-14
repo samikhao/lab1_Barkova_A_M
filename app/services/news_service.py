@@ -10,6 +10,8 @@ from app.cache import keys
 from app.core.config import settings
 import logging
 
+from app.tasks.news_notifications import send_new_news_notifications
+
 logger = logging.getLogger(__name__)
 
 
@@ -31,6 +33,8 @@ class NewsService:
         await redis.delete(keys.news_all())
         await redis.delete(keys.news_id(news.id))
         logger.info("cache DEL (create): %s", news.id)
+
+        send_new_news_notifications.delay(news.id)
 
         return news
 
