@@ -20,8 +20,18 @@ class Settings(BaseSettings):
     CACHE_TTL_NEWS: int = 300
     USER_CACHE_TTL_MIN: int = 20
 
+    CELERY_BROKER_URL: str | None = None
+    CELERY_RESULT_BACKEND: str | None = None
+    NOTIFICATIONS_LOG_FILE: str = "notifications.log"
+
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
 
 settings = Settings()
+
+if settings.CELERY_BROKER_URL is None:
+    settings.CELERY_BROKER_URL = settings.REDIS_URL
+
+if settings.CELERY_RESULT_BACKEND is None:
+    settings.CELERY_RESULT_BACKEND = settings.REDIS_URL
