@@ -24,6 +24,7 @@ cp .env.example .env
 DATABASE_URL = "postgresql+asyncpg://username:password@localhost:5432/db_name"
 ```
 Заполнить .env своими данными.
+Запустить Redis локально или настроить через Docker.
 
 # Создание таблиц и наполнение их данными для примера:
 ```bash
@@ -33,6 +34,16 @@ alembic upgrade head
 # Запуск
 ```bash
 uvicorn app.api.main:app --reload
+```
+
+# Запуск celery worker
+```bash
+celery -A app.tasks.celery_app.celery_app worker --loglevel=info
+```
+
+# Запуск celery beat (для weekly digest)
+```bash
+celery -A app.tasks.celery_app.celery_app beat --loglevel=info
 ```
 
 # ERD
