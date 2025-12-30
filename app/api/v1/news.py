@@ -17,8 +17,8 @@ async def create_news(payload: NewsCreate, repos=Depends(get_repos), user: User 
 
 @router.get("/", response_model=list[NewsRead])
 async def list_news(repos=Depends(get_repos)):
-    news: NewsRepo = repos["news"]
-    return await news.list()
+    svc = NewsService(users=repos["users"], news=repos["news"])
+    return await svc.list_cached()
 
 @router.patch("/{news_id}", response_model=NewsRead, dependencies=[Depends(require_news_owner_or_admin)])
 async def update_news(news_id: int, payload: NewsUpdate, repos=Depends(get_repos)):

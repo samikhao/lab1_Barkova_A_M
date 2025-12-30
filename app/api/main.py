@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 from app.api.v1.router import api_router
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+)
 
 app = FastAPI(title="web lab1")
 app.include_router(api_router, prefix="/api/v1")
