@@ -24,3 +24,14 @@ async def list_comments(repos=Depends(get_repos)):
 async def update_comment(comment_id: int, payload: CommentUpdate, repos=Depends(get_repos)):
     svc = _service(repos)
     return await svc.update(comment_id, payload.model_dump(exclude_unset=True))
+
+
+@router.delete(
+    "/{comment_id}",
+    status_code=204,
+    dependencies=[Depends(require_comment_owner_or_admin)],
+)
+async def delete_comment(comment_id: int, repos=Depends(get_repos)):
+    svc = _service(repos)
+    await svc.delete(comment_id)
+    return

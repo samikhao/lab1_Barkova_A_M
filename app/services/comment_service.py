@@ -22,3 +22,10 @@ class CommentService:
         if not comment:
             raise HTTPException(404, "comment not found")
         return await self.comments.update(comment_id, data)
+
+    async def delete(self, comment_id: int) -> None:
+        comment = await self.comments.get(comment_id)
+        if not comment:
+            raise HTTPException(404, "comment not found")
+        await self.comments.delete(comment_id)
+        return

@@ -27,3 +27,10 @@ class CommentRepo:
         await self.db.commit()
         await self.db.refresh(obj)
         return obj
+
+    async def delete(self, comment_id: int) -> None:
+        obj = await self.db.get(Comment, comment_id)
+        if not obj:
+            return
+        await self.db.delete(obj)
+        await self.db.commit()
