@@ -11,5 +11,5 @@ api_router = APIRouter()
 api_router.include_router(auth_router, prefix="/auth", tags=["auth"])
 
 api_router.include_router(users_router, dependencies=[Depends(require_authenticated)])
-api_router.include_router(news_router, dependencies=[Depends(require_authenticated)])
-api_router.include_router(comments_router, dependencies=[Depends(require_authenticated)])
+api_router.include_router(news_router)
+api_router.include_router(comments_router)
