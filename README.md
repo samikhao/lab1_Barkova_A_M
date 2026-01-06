@@ -81,17 +81,7 @@ erDiagram
 ```
 
 # Примеры работы всех эндпоинтов:
-## 1. Проверка закрытых эндпоинтов
-```bash
-curl -i http://127.0.0.1:8000/api/v1/news/
-```
-
-Ответ сервера:
-```json
-{"detail":"Missing bearer token"}
-```
-
-## 2. Регистрация пользователя
+## 1. Регистрация пользователя
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/auth/register \
   -H "Content-Type: application/json" \
@@ -106,7 +96,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/auth/register \
 }
 ```
 
-## 3. Логин
+## 2. Логин
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/auth/login \
   -H "Content-Type: application/json" \
@@ -121,7 +111,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/auth/login \
 }
 ```
 
-## 4. Обновление токена
+## 3. Обновление токена
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/auth/refresh \
   -H "Content-Type: application/json" \
@@ -136,14 +126,14 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/auth/refresh \
 }
 ```
 
-## 5. Logout
+## 4. Logout
 ```bash
 curl -i -X POST http://127.0.0.1:8000/api/v1/auth/logout \
   -H "Content-Type: application/json" \
   -d "{\"refresh\":\"$REFRESH_TOKEN\"}"
 ```
 
-## 6. Мои сессии
+## 5. Мои сессии
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/auth/sessions \
   -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
@@ -187,7 +177,7 @@ curl -s http://127.0.0.1:8000/api/v1/auth/sessions \
 ]
 ```
 
-## 7. GitHub OAuth
+## 6. GitHub OAuth
 Перейти по ссылке:
 [GitHub Login](http://localhost:8000/api/v1/auth/github/login)
 Авторизоваться через GitHub.
@@ -199,7 +189,7 @@ curl -s http://127.0.0.1:8000/api/v1/auth/sessions \
 }
 ```
 
-## 8. Список пользователей
+## 7. Список пользователей
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/users/ \
   -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
@@ -243,7 +233,7 @@ curl -s http://127.0.0.1:8000/api/v1/users/ \
 ]
 ```
 
-## 9. Верификация пользователей админом
+## 8. Верификация пользователей админом
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/users/4/verify \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
@@ -263,7 +253,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/users/4/verify \
 }
 ```
 
-## 10. Список новостей
+## 9. Список новостей
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/news/ \
   -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
@@ -299,7 +289,7 @@ curl -s http://127.0.0.1:8000/api/v1/news/ \
 ]
 ```
 
-## 11. Создание новости
+## 10. Создание новости
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/news/ \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
@@ -321,7 +311,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/news/ \
 }
 ```
 
-## 12. Редактирование своей новости
+## 11. Редактирование своей новости
 ```bash
 curl -s -X PATCH http://127.0.0.1:8000/api/v1/news/3 \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
@@ -343,13 +333,13 @@ curl -s -X PATCH http://127.0.0.1:8000/api/v1/news/3 \
 }
 ```
 
-## 13. Удаление новости
+## 12. Удаление новости
 ```bash
 curl -i -X DELETE http://127.0.0.1:8000/api/v1/news/3 \
   -H "Authorization: Bearer $ACCESS_TOKEN"
 ```
 
-## 14. Список комментариев
+## 13. Список комментариев
 ```bash
 curl -s http://127.0.0.1:8000/api/v1/comments/ \
   -H "Authorization: Bearer $ACCESS_TOKEN" | jq .
@@ -375,7 +365,7 @@ curl -s http://127.0.0.1:8000/api/v1/comments/ \
 ]
 ```
 
-## 15. Создание комментария
+## 14. Создание комментария
 ```bash
 curl -s -X POST http://127.0.0.1:8000/api/v1/comments/ \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
@@ -394,7 +384,7 @@ curl -s -X POST http://127.0.0.1:8000/api/v1/comments/ \
 }
 ```
 
-## 16. Редактирование комментария
+## 15. Редактирование комментария
 ```bash
 curl -s -X PATCH http://127.0.0.1:8000/api/v1/comments/3 \
   -H "Authorization: Bearer $ACCESS_TOKEN" \
