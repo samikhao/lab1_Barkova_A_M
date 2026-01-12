@@ -1,11 +1,12 @@
 from pydantic_settings import BaseSettings
+from pydantic import Field
 
 
 class Settings(BaseSettings):
     APP_TITLE: str = "web lab1"
 
     DATABASE_URL: str
-    
+
     JWT_SECRET: str
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TTL_MIN: int = 15
@@ -23,6 +24,12 @@ class Settings(BaseSettings):
     CELERY_BROKER_URL: str | None = None
     CELERY_RESULT_BACKEND: str | None = None
     NOTIFICATIONS_LOG_FILE: str = "notifications.log"
+
+    LOG_FILE: str = Field(default="logs/app.jsonl", alias="LOG_FILE")
+    METRICS_JSONL: str = Field(default="metrics/metrics.jsonl", alias="METRICS_JSONL")
+    METRICS_DUMP_INTERVAL_SEC: int = Field(
+        default=10, alias="METRICS_DUMP_INTERVAL_SEC"
+    )
 
     class Config:
         env_file = ".env"
