@@ -45,3 +45,9 @@ dist/
 
 celerybeat-schedule
 celerybeat-schedule.db
+
+logs/*
+metrics/*
+
+!logs/.gitkeep
+!metrics/.gitkeep
