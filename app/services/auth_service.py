@@ -31,6 +31,7 @@ from app.cache.redis_client import get_redis
 from app.cache.codec import encode, decode
 from app.cache import keys
 
+from app.observability.metrics import BUSINESS_USERS_REGISTERED_TOTAL
 
 logger = logging.getLogger("cache.auth")
 
@@ -142,6 +143,7 @@ class AuthService:
             "email": req.email,
             "password_hash": hash_password(req.password),
         })
+        BUSINESS_USERS_REGISTERED_TOTAL.inc()
         return await self._issue_tokens(user, request)
 
     async def login_password(self, req: LoginRequest, request: Request) -> TokenPair:
@@ -163,7 +165,7 @@ class AuthService:
         except Exception:
             await self._rs_revoke(req.refresh)
             raise HTTPException(status_code=401, detail="Corrupted session data")
-        
+
         if expires_at <= datetime.now(timezone.utc):
             await self._rs_revoke(req.refresh)
             raise HTTPException(status_code=401, detail="Refresh session expired")
