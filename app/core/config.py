@@ -16,6 +16,8 @@ class Settings(BaseSettings):
     GITHUB_CLIENT_SECRET: str | None = None
     GITHUB_REDIRECT_URL: str | None = None
 
+    HAWK_TOKEN: str | None = None
+
     REDIS_URL: str = "redis://localhost:6379/0"
     CACHE_PREFIX: str = "app"
     CACHE_TTL_NEWS: int = 300

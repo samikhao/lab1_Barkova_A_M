@@ -12,6 +12,8 @@ import logging
 
 from app.tasks.news_notifications import send_new_news_notifications
 
+from app.observability.metrics import BUSINESS_NEWS_CREATED_TOTAL
+
 logger = logging.getLogger(__name__)
 
 
@@ -26,8 +28,9 @@ class NewsService:
             raise HTTPException(404, "author not found")
         if not author.is_verified_author:
             raise HTTPException(403, "author is not verified to publish news")
-        
+
         news = await self.news.create(data)
+        BUSINESS_NEWS_CREATED_TOTAL.inc()
 
         redis = await get_redis()
         await redis.delete(keys.news_all())
@@ -42,7 +45,7 @@ class NewsService:
         news = await self.news.get(news_id)
         if not news:
             raise HTTPException(404, "news not found")
-        
+
         news = await self.news.update(news_id, data)
 
         redis = await get_redis()
@@ -56,7 +59,7 @@ class NewsService:
         news = await self.news.get(news_id)
         if not news:
             raise HTTPException(404, "news not found")
-        
+
         news = await self.news.delete(news_id)
 
         redis = await get_redis()
