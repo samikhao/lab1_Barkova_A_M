@@ -12,14 +12,16 @@ from app.db.session import SessionLocal
 from app.repos.user_repo import UserRepo
 from app.repos.news_repo import NewsRepo
 
+from app.observability.metrics import NEWS_NOTIFICATIONS_TOTAL
+from app.observability.logging import configure_logging
+import structlog
+
+
+configure_logging()
+
+log = structlog.get_logger("tasks.news_notifications")
 
 logger = get_task_logger(__name__)
-
-file_handler = logging.FileHandler(settings.NOTIFICATIONS_LOG_FILE)
-file_handler.setFormatter(
-    logging.Formatter("%(asctime)s [%(levelname)s] %(message)s")
-)
-logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
 
@@ -58,12 +60,15 @@ class BaseRetryTask(Task):
 )
 def send_new_news_notifications(news_id: int):
     redis = get_redis_sync()
-
     users, news = asyncio.run(_get_users_and_news(news_id))
 
     if news is None:
-        logger.warning("News %s not found, skip notifications", news_id)
+        log.warning(
+            "news_not_found_skip_notifications", news_id=news_id, channel="email"
+        )
         return
+
+    channel = "email"
 
     for user in users:
         key = f"notify:news:{news.id}:user:{user.id}"
@@ -74,13 +79,31 @@ def send_new_news_notifications(news_id: int):
 
         redis.expire(key, 60 * 60 * 24 * 30)
 
-        logger.info(
-            "[NEW_NEWS] to=%s <%s> news_id=%s title=%r",
-            user.name,
-            user.email,
-            news.id,
-            news.title,
-        )
+        try:
+            NEWS_NOTIFICATIONS_TOTAL.labels(channel=channel, status="success").inc()
+
+            log.info(
+                "notification_sent",
+                kind="new_news",
+                channel=channel,
+                user_id=user.id,
+                user_email=user.email,
+                user_name=user.name,
+                news_id=news.id,
+                news_title=news.title,
+            )
+
+        except Exception:
+            NEWS_NOTIFICATIONS_TOTAL.labels(channel=channel, status="error").inc()
+            log.exception(
+                "notification_failed",
+                kind="new_news",
+                channel=channel,
+                user_id=user.id,
+                user_email=user.email,
+                news_id=news.id,
+            )
+            raise
 
 
 @celery_app.task(
@@ -89,15 +112,15 @@ def send_new_news_notifications(news_id: int):
 )
 def send_weekly_digest():
     redis = get_redis_sync()
-
     users, news_items, now = asyncio.run(_get_users_and_weekly_news())
 
+    channel = "email"
+
     if not news_items:
-        logger.info("[WEEKLY_DIGEST] no news in last 7 days, skip")
+        log.info("weekly_digest_skip_no_news", channel=channel)
         return
 
     iso_year, iso_week, _ = now.isocalendar()
-
     news_ids = [n.id for n in news_items]
     titles = [n.title for n in news_items]
 
@@ -110,12 +133,31 @@ def send_weekly_digest():
 
         redis.expire(key, 60 * 60 * 24 * 30)
 
-        logger.info(
-            "[WEEKLY_DIGEST] to=%s <%s> week=%s-%s news_ids=%s titles=%s",
-            user.name,
-            user.email,
-            iso_year,
-            iso_week,
-            news_ids,
-            titles,
-        )
+        try:
+            NEWS_NOTIFICATIONS_TOTAL.labels(channel=channel, status="success").inc()
+
+            log.info(
+                "notification_sent",
+                kind="weekly_digest",
+                channel=channel,
+                user_id=user.id,
+                user_email=user.email,
+                user_name=user.name,
+                iso_year=iso_year,
+                iso_week=iso_week,
+                news_ids=news_ids,
+                titles=titles,
+            )
+
+        except Exception:
+            NEWS_NOTIFICATIONS_TOTAL.labels(channel=channel, status="error").inc()
+            log.exception(
+                "notification_failed",
+                kind="weekly_digest",
+                channel=channel,
+                user_id=user.id,
+                user_email=user.email,
+                iso_year=iso_year,
+                iso_week=iso_week,
+            )
+            raise
