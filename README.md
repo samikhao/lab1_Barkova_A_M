@@ -4,46 +4,19 @@ git clone https://github.com/itmo-webdev/lab1_Barkova_A_M.git
 cd lab1_Barkova_A_M
 ```
 
-# Создание виртуального окружения
-```bash
-python -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-```
-
-# Установка зависимостей
-```bash
-pip install -r requirements.txt
-```
-
 # Настройка окружения
 ```bash
 cp .env.example .env
 ```
-Установить PostgreSQL и создать базу данных. Указать в .env ссылку вида:
-```python
-DATABASE_URL = "postgresql+asyncpg://username:password@localhost:5432/db_name"
-```
-Заполнить .env своими данными.
-Запустить Redis локально или настроить через Docker.
-
-# Создание таблиц и наполнение их данными для примера:
-```bash
-alembic upgrade head
-```
 
 # Запуск
 ```bash
-uvicorn app.api.main:app --reload
+docker compose up -d --build
 ```
 
-# Запуск celery worker
+# Остановка
 ```bash
-celery -A app.tasks.celery_app.celery_app worker --loglevel=info
-```
-
-# Запуск celery beat (для weekly digest)
-```bash
-celery -A app.tasks.celery_app.celery_app beat --loglevel=info
+docker compose down [-v]
 ```
 
 # ERD
